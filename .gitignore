@@ -1,2 +1,3 @@
-gopoke
+/gopoke
+!/gopoke/
 *.log
