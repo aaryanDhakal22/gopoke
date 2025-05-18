@@ -1,4 +1,4 @@
-package main
+package utils
 
 import (
 	"testing"
@@ -24,7 +24,7 @@ func TestCleanInput(t *testing.T) {
 
 	for _, item := range items {
 		t.Run(item.input, func(t *testing.T) {
-			actual := cleanInput(item.input)
+			actual := CleanInput(item.input)
 			if len(actual) != len(item.expected) {
 				t.Fatalf("Expected length of array was %v but got %v", len(item.expected), len(actual))
 			}
