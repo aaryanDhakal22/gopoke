@@ -17,18 +17,15 @@ func main() {
 
 	logger.Init()
 
-	appstate.InitCache(ctx)
+	cache := appstate.NewCache(ctx)
+
+	processor := command.NewProcessor(cache)
 
 	scanner := bufio.NewScanner(os.Stdin)
 	for {
 		fmt.Print("Pokedex > ")
 		scanner.Scan()
-		text := utils.CleanInput(scanner.Text())
-		obj, ok := command.Register[text[0]]
-		if ok {
-			obj.Callback()
-		} else {
-			fmt.Println("Unknown Command")
-		}
+		text := utils.CleanInput(scanner.Text())[0]
+		processor.Execute(text)
 	}
 }

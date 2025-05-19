@@ -6,8 +6,6 @@ import (
 	"time"
 )
 
-var GlobalCache *pokecache.PokeCache
-
-func InitCache(ctx context.Context) {
-	GlobalCache = pokecache.NewCache(5*time.Second, ctx)
+func NewCache(ctx context.Context) *pokecache.PokeCache {
+	return pokecache.NewCache(5*time.Second, ctx)
 }
