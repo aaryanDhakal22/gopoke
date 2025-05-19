@@ -7,5 +7,5 @@ import (
 )
 
 func NewCache(ctx context.Context) *pokecache.PokeCache {
-	return pokecache.NewCache(5*time.Second, ctx)
+	return pokecache.NewCache(2*time.Second, ctx)
 }

@@ -8,6 +8,7 @@ import (
 	"bufio"
 	"context"
 	"fmt"
+	"log/slog"
 	"os"
 )
 
@@ -17,6 +18,7 @@ func main() {
 
 	logger.Init()
 
+	logger.SetLevel(slog.LevelDebug)
 	cache := appstate.NewCache(ctx)
 
 	processor := command.NewProcessor(cache)

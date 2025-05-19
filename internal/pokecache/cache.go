@@ -55,7 +55,12 @@ func (pc *PokeCache) delete(keys []string) {
 	pc.mu.Lock()
 	defer pc.mu.Unlock()
 
+	if len(keys) == 0 {
+		slog.Debug("[CACHE] Nothing to delete")
+		return
+	}
 	for _, key := range keys {
+		slog.Info("[CACHE] Deleted a key")
 		delete(pc.cache, key)
 	}
 }
@@ -64,6 +69,7 @@ func (pc *PokeCache) reapLoop(ctx context.Context) {
 	defer ticker.Stop()
 	slog.Debug("[CACHE] Reaper started") // ✅ Confirm it's running
 	for {
+		slog.Info("[CACHE] Looping for")
 		select {
 		case <-ctx.Done():
 			slog.Debug("[CACHE] Reaper stopping...")
