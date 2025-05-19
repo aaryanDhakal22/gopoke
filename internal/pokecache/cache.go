@@ -65,7 +65,7 @@ func (pc *PokeCache) delete(keys []string) {
 	}
 }
 func (pc *PokeCache) reapLoop(ctx context.Context) {
-	ticker := time.NewTicker(pc.interval * time.Second)
+	ticker := time.NewTicker(pc.interval)
 	defer ticker.Stop()
 	slog.Debug("[CACHE] Reaper started") // ✅ Confirm it's running
 	for {
@@ -77,15 +77,17 @@ func (pc *PokeCache) reapLoop(ctx context.Context) {
 		case <-ticker.C:
 			slog.Debug("[CACHE] Ticking... checking for expired items")
 			go func() {
+				pc.mu.RLock()
 				mark := []string{}
 				for k, v := range pc.cache {
-					delta := v.createdAt.Sub(time.Now())
-					if delta.Abs() >= pc.interval {
+					age := time.Since(v.createdAt)
+					if age >= pc.interval {
 						mark = append(mark, k)
 					} else {
 						continue
 					}
 				}
+				pc.mu.RUnlock()
 				pc.delete(mark)
 			}()
 		}
