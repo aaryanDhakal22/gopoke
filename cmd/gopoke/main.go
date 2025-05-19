@@ -17,8 +17,8 @@ func main() {
 	defer cancel()
 
 	logger.Init()
+	logger.SetLevel(slog.LevelError)
 
-	logger.SetLevel(slog.LevelDebug)
 	cache := appstate.NewCache(ctx)
 
 	processor := command.NewProcessor(cache)

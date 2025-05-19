@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
+	"log/slog"
 	"net/http"
 )
 
@@ -23,23 +23,23 @@ func (p *Processor) mapGen() {
 	url := fmt.Sprintf("https://pokeapi.co/api/v2/location-area/?offset=%v&limit=20", 20*(p.mapCounter-1))
 	data, ok := p.cache.Get(url)
 	if !ok {
-		log.Println("\n\n Getting a new copy ")
+		slog.Info("[MAPS] Getting a new copy ")
 		res, err := http.Get(url)
 		if err != nil {
-			log.Fatal("Unable to create a request", err)
+			slog.Error("[MAPS] Unable to create a request")
 			return
 		}
 		data, err = io.ReadAll(res.Body)
 		if err != nil {
-			log.Fatal("Unable to convert to bytes", err)
+			slog.Error("[MAPS] Unable to convert to bytes")
 		}
 		p.cache.Add(url, data)
 		defer res.Body.Close()
 	} else {
-		log.Println("Found a copy on cache")
+		slog.Info("[MAPS] Found a copy on cache")
 	}
 	if err := json.Unmarshal(data, &locs); err != nil {
-		log.Fatal("Unable to decode the json", err)
+		slog.Error("[MAPS] Unable to decode the json")
 		return
 	}
 	for idx := range locs.Results {
