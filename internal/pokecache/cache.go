@@ -1,6 +1,8 @@
 package pokecache
 
 import (
+	"context"
+	"log/slog"
 	"sync"
 	"time"
 )
@@ -15,13 +17,13 @@ type CacheEntry struct {
 	val       []byte
 }
 
-func NewCache(interval time.Duration) *PokeCache {
+func NewCache(interval time.Duration, ctx context.Context) *PokeCache {
 	newPc := &PokeCache{
 		cache:    make(map[string]CacheEntry),
 		interval: interval,
 		mu:       &sync.RWMutex{},
 	}
-	go newPc.reapLoop()
+	go newPc.reapLoop(ctx)
 	return newPc
 }
 
@@ -32,12 +34,14 @@ func (pc *PokeCache) Add(key string, val []byte) {
 		createdAt: time.Now(),
 		val:       val,
 	}
+	slog.Debug("[CACHE] Added item for key")
 
 }
 
 func (pc *PokeCache) Get(key string) ([]byte, bool) {
 	pc.mu.RLock()
 	defer pc.mu.RUnlock()
+
 	if ret, ok := pc.cache[key]; ok {
 		return ret.val, true
 	}
@@ -55,22 +59,29 @@ func (pc *PokeCache) delete(keys []string) {
 		delete(pc.cache, key)
 	}
 }
-func (pc *PokeCache) reapLoop() {
+func (pc *PokeCache) reapLoop(ctx context.Context) {
 	ticker := time.NewTicker(pc.interval * time.Second)
+	defer ticker.Stop()
+	slog.Debug("[CACHE] Reaper started") // ✅ Confirm it's running
 	for {
-		// This line is blocked till the ticker ticks
-		<-ticker.C
-		go func() {
-			mark := []string{}
-			for k, v := range pc.cache {
-				delta := v.createdAt.Sub(time.Now())
-				if delta.Abs() >= pc.interval {
-					mark = append(mark, k)
-				} else {
-					continue
+		select {
+		case <-ctx.Done():
+			slog.Debug("[CACHE] Reaper stopping...")
+			return
+		case <-ticker.C:
+			slog.Debug("[CACHE] Ticking... checking for expired items")
+			go func() {
+				mark := []string{}
+				for k, v := range pc.cache {
+					delta := v.createdAt.Sub(time.Now())
+					if delta.Abs() >= pc.interval {
+						mark = append(mark, k)
+					} else {
+						continue
+					}
 				}
-			}
-			pc.delete(mark)
-		}()
+				pc.delete(mark)
+			}()
+		}
 	}
 }

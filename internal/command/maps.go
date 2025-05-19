@@ -1,8 +1,10 @@
 package command
 
 import (
+	"bootdev/gopoke/internal/appstate"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 )
@@ -12,14 +14,24 @@ var Counter int = 0
 func MapGen() {
 	locs := LocType{}
 	url := fmt.Sprintf("https://pokeapi.co/api/v2/location-area/?offset=%v&limit=20", 20*(Counter-1))
-	res, err := http.Get(url)
-	if err != nil {
-		log.Fatal("Unable to create a request", err)
-		return
+	data, ok := appstate.GlobalCache.Get(url)
+	if !ok {
+		log.Println("\n\n Getting a new copy ")
+		res, err := http.Get(url)
+		if err != nil {
+			log.Fatal("Unable to create a request", err)
+			return
+		}
+		data, err = io.ReadAll(res.Body)
+		if err != nil {
+			log.Fatal("Unable to convert to bytes", err)
+		}
+		appstate.GlobalCache.Add(url, data)
+		defer res.Body.Close()
+	} else {
+		log.Println("Found a copy on cache")
 	}
-	defer res.Body.Close()
-	decoder := json.NewDecoder(res.Body)
-	if err = decoder.Decode(&locs); err != nil {
+	if err := json.Unmarshal(data, &locs); err != nil {
 		log.Fatal("Unable to decode the json", err)
 		return
 	}
