@@ -27,7 +27,11 @@ func main() {
 	for {
 		fmt.Print("Pokedex > ")
 		scanner.Scan()
-		text := utils.CleanInput(scanner.Text())[0]
-		processor.Execute(text)
+		text := utils.CleanInput(scanner.Text())
+		if len(text) == 1 {
+			processor.Execute(text[0])
+		} else if len(text) == 2 {
+			processor.ExecuteWithArgs(text[0], text[1])
+		}
 	}
 }

@@ -9,7 +9,7 @@ import (
 type cliCommand struct {
 	Name        string
 	Description string
-	Callback    func()
+	Callback    func(args string)
 }
 type Processor struct {
 	commands   map[string]cliCommand
@@ -29,7 +29,14 @@ func NewProcessor(cache *pokecache.PokeCache) *Processor {
 
 func (p *Processor) Execute(cmdName string) {
 	if cmd, ok := p.commands[cmdName]; ok {
-		cmd.Callback()
+		cmd.Callback("")
+	} else {
+		fmt.Println("Unknown Command")
+	}
+}
+func (p *Processor) ExecuteWithArgs(cmdName string, args string) {
+	if cmd, ok := p.commands[cmdName]; ok {
+		cmd.Callback(args)
 	} else {
 		fmt.Println("Unknown Command")
 	}
@@ -55,10 +62,15 @@ func (p *Processor) registerCommands() {
 		Description: "Go to next Map",
 		Callback:    p.mapFactory(1),
 	}
+	p.commands["explore"] = cliCommand{
+		Name:        "explore",
+		Description: "Find wild pokemon in an area",
+		Callback:    p.explore,
+	}
 
 }
 
-func (p *Processor) commandHelp() {
+func (p *Processor) commandHelp(args string) {
 	fmt.Println("Welcome to the Pokedex!")
 	fmt.Print("Usage:\n\n")
 	for k, v := range p.commands {
@@ -67,7 +79,7 @@ func (p *Processor) commandHelp() {
 	return
 }
 
-func (p *Processor) commandExit() {
+func (p *Processor) commandExit(args string) {
 	fmt.Println("Closing the Pokedex... Goodbye!")
 	os.Exit(0)
 	return
